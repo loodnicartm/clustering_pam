@@ -1,55 +1,73 @@
-install.packages('raster')
-library(raster)
-install.packages('cluster')
-library("cluster")
-install.packages('randomForest')
-library("randomForest")
-install.packages('ggplot2')
-library(ggplot2)
-install.packages('data.table')
-library(data.table)
-library(cluster)
-install.packages('clusterCrit')
-library(clusterCrit)
-install.packages('dtwclust')
-library(dtwclust)
-library(rgdal)
-library(dplyr)
-install.packages('ppclust')
-library(ppclust)
-library(dtw)
-install.packages("terra")
-library("terra")
-install.packages("sf")
-library("sf")
-install.packages("stars")
-library("stars")
-install.packages("rgdal")
-library("rgdal")
-install.packages("caTools")
-library("caTools")
-install.packages("caret")
-library("caTools")
-install.packages("RStoolbox")
-library("caTools")
-install.packages("reshape")
-library("reshape")
-install.packages("sClust")
-library("sClust")
-install.packages("eclust")
-library("eclust")
-install.packages("factoextra")
-library("factoextra")
+# Install and load libraries
+pkg_list = c('terra', 'randomForest', 'ggplot2', 'dtwclust', 'sf', 'caret')
 
-#data preparation
-bsci_test_list<-list.files(path = "E:/NORTHERN_NEGEV/PROCESSING/NDVI/testpam/ndvi_pam", pattern= ".tif", all.files=TRUE, full.names=FALSE)
-dir<-"E:/NORTHERN_NEGEV/PROCESSING/NDVI/testpam/ndvi_pam/"
-bsci_raster1 <- lapply(paste0(dir,bsci_test_list), raster)
-bsci_rasterstack<- stack(bsci_raster1)
-bsci_rasterstack<- rast(bsci_rasterstack)
+installed_packages <- pkg_list %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(pkg_list[!installed_packages])
+}
 
-shp_nn<-shapefile("E:/NORTHERN_NEGEV/ARCMAP_docs/shapefile/Export_Output_forest.shp")
-full_bsci<-mask(bsci_rasterstack, shp_nn)
+# Load Packages
+lapply(pkg_list, function(p) {require(p,
+                                      character.only = TRUE,
+                                      quietly=TRUE)})
+#
+# install.packages('raster')
+# library(raster)
+# install.packages('cluster')
+# library("cluster")
+# install.packages('randomForest')
+# library("randomForest")
+# install.packages('ggplot2')
+# library(ggplot2)
+# install.packages('data.table')
+# library(data.table)
+# library(cluster)
+# install.packages('clusterCrit')
+# library(clusterCrit)
+# install.packages('dtwclust')
+# library(dtwclust)
+# library(rgdal)
+# library(dplyr)
+# install.packages('ppclust')
+# library(ppclust)
+# library(dtw)
+# install.packages("terra")
+# library("terra")
+# install.packages("sf")
+# library("sf")
+# install.packages("stars")
+# library("stars")
+# install.packages("rgdal")
+# library("rgdal")
+# install.packages("caTools")
+# library("caTools")
+# install.packages("caret")
+# library("caTools")
+# install.packages("RStoolbox")
+# library("caTools")
+# install.packages("reshape")
+# library("reshape")
+# install.packages("sClust")
+# library("sClust")
+# install.packages("eclust")
+# library("eclust")
+# install.packages("factoextra")
+# library("factoextra")
+
+# Load rasters into stack
+Data_dir = "../" # Edit to reflect the path on your computer
+tif_list = list.files(Data_dir, pattern=".tif", full.names = TRUE)
+stk = rast(tif_list)
+nlyr(stk)
+
+# bsci_test_list<-list.files(path = "E:/NORTHERN_NEGEV/PROCESSING/NDVI/testpam/ndvi_pam", pattern= ".tif", all.files=TRUE, full.names=FALSE)
+# dir<-"E:/NORTHERN_NEGEV/PROCESSING/NDVI/testpam/ndvi_pam/"
+# bsci_raster1 <- lapply(paste0(dir,bsci_test_list), raster)
+# bsci_rasterstack<- stack(bsci_raster1)
+# bsci_rasterstack<- rast(bsci_rasterstack)
+#
+# shp_nn<-shapefile("E:/NORTHERN_NEGEV/ARCMAP_docs/shapefile/Export_Output_forest.shp")
+# full_bsci<-mask(bsci_rasterstack, shp_nn)
 
 
 years<-c(1984:2011, 2013:2020)
@@ -105,7 +123,7 @@ library(RStoolbox)
 fullbsci<-as.data.frame(fullbsci)
 clustering_pam3<-ggplot(fullbsci, geom_raster = T)+
   scale_fill_discrete(labels=paste("Cluster", 1:3), guide_legend(reverse=T), na.translate = FALSE,)+
-  scale_color_manual(labels=paste("Cluster", 1:3),values=c("palegreen3", "dodgerblue3", "orchid3"), 
+  scale_color_manual(labels=paste("Cluster", 1:3),values=c("palegreen3", "dodgerblue3", "orchid3"),
                       scale_y_continuous(limits = c(-1, 1)),
                       aesthetics = c("colour", "colour"),
                       na.translate = FALSE)+
@@ -145,7 +163,7 @@ ci_over_time<-ggplot(centers_ci_ci, aes(Time, value, group = cluster)) +
             color="darkgreen", alpha = 0.70, size = 1) +
   labs(x = "\n Time \n", y = "\nCI\n") + ylim(c(0,1))+
   theme_bw() +
-  theme(axis.text = element_text(size=14), 
+  theme(axis.text = element_text(size=14),
         axis.title = element_text(size=16),
         strip.text = element_text(size=18))+
   facet_wrap(~cluster, ncol = 1, scales = "free_y")
@@ -160,10 +178,10 @@ ci_over_time1<-ggplot(centers_ci_ci, aes( x = Time, y = value, group = cluster ,
   geom_line(data = centers_ci_ci$cluster=="Cluster 2", aes(Time, value),
             color = "dodgerblue3", alpha = 0.70, size = 1) +
   geom_line(data = centers_ci_ci$cluster=="Cluster 3", aes(Time, value),
-            color = "orchid3", alpha = 0.70, size = 1) +  
+            color = "orchid3", alpha = 0.70, size = 1) +
   labs(x = "\n Time \n", y = "\nCI\n") + ylim(c(0,1))+
   theme_bw() +
-  theme(axis.text = element_text(size=14), 
+  theme(axis.text = element_text(size=14),
         axis.title = element_text(size=16),
         strip.text = element_text(size=18))
 
@@ -205,7 +223,6 @@ cluster_meds<-read.csv("G:/klil1/artical/cluster_medoids.csv")
 med_cor<-cor(cluster_meds[,c(2:4)])
 
 tiff("G:/klil1/artical/correlation_plot.tif", width = 30, height=28, res=100, units="cm")
-corrplot(med_cor, method="color", addCoef.col = "black", type="upper", 
+corrplot(med_cor, method="color", addCoef.col = "black", type="upper",
          tl.col="black", diag=T, tl.cex=2, number.cex = 1.5, cl.cex=1.5)
 dev.off()
-
