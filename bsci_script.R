@@ -1,4 +1,6 @@
+#-----------------------------
 # Install and load libraries
+#-----------------------------
 pkg_list = c('terra', 'randomForest', 'ggplot2', 'dtwclust', 'sf', 'caret')
 
 installed_packages <- pkg_list %in% rownames(installed.packages())
@@ -6,7 +8,9 @@ if (any(installed_packages == FALSE)) {
   install.packages(pkg_list[!installed_packages])
 }
 
+#-----------------------------
 # Load Packages
+#-----------------------------
 lapply(pkg_list, function(p) {require(p,
                                       character.only = TRUE,
                                       quietly=TRUE)})
@@ -54,11 +58,43 @@ lapply(pkg_list, function(p) {require(p,
 # install.packages("factoextra")
 # library("factoextra")
 
+#-----------------------------
 # Load rasters into stack
-Data_dir = "../" # Edit to reflect the path on your computer
-tif_list = list.files(Data_dir, pattern=".tif", full.names = TRUE)
-stk = rast(tif_list)
-nlyr(stk)
+#-----------------------------
+Data_dir <-  "../" # Edit to reflect the path on your computer
+tif_list <-  list.files(Data_dir, pattern=".tif", full.names = TRUE)
+stk <-  rast(tif_list)
+print("Dimensions of stack: "); print(dim(stk))
+print(paste("Extent of raster:", ext(stk)))
+print(paste("Number of cells:", ncell(stk)))
+
+# Have a look
+plot(stk$`MOD13A3.A2021305.h20v05.006.2021338162541.psrpgs_000501811712.1_km_monthly_NDVI-1_km_monthly_NDVI`)
+
+#-----------------------------
+# Take a random sample of points 
+#-----------------------------
+#Use a random sampling of points instead of the full raster
+sample_pts <- spatSample(stk, 1000, na.rm = TRUE, as.points=TRUE)
+length(sample_pts[,1])
+# Get only the values (for clustering:
+sample_df = as.data.frame(sample_pts)
+
+#-----------------------------
+# Time series clustering
+#-----------------------------
+# Even with the very small sample of points, this takes a long time!
+clust <-  tsclust(sample_df, k=3)
+# and join back to the points
+
+sample_result = cbind(sample_pts, data.frame(clust@cluster))
+plot(sample_result, col=sample_result$clust.cluster)
+
+#-----------------------------
+# Done
+#-----------------------------
+
+
 
 # bsci_test_list<-list.files(path = "E:/NORTHERN_NEGEV/PROCESSING/NDVI/testpam/ndvi_pam", pattern= ".tif", all.files=TRUE, full.names=FALSE)
 # dir<-"E:/NORTHERN_NEGEV/PROCESSING/NDVI/testpam/ndvi_pam/"
